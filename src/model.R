@@ -61,4 +61,12 @@ crime_update <- crime %>%
   mutate(Day = lubridate::wday(Date))
 
 
+##todo
+##clean location description
+##look at the time to get morning, afternoon, evening, night
+##time of day
+##day of week
+## other features if I can think of em
+
+
 spark_disconnect(sc)
