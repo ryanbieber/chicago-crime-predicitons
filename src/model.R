@@ -266,4 +266,66 @@ sex_crimes_count_merged <- sex_crimes_count %>%
 ###
 
 library(sparklyr)
-sc <- spark_connect("local")
+library(dplyr)
+sc <- spark_connect('local')
+
+fbi_merge_code_spark <- sdf_copy_to(sc, fbi_merge_code)
+
+crimes_spark <- spark_read_csv(sc, path = "data/Crimes_-_2001_to_Present.csv") %>%
+  mutate(FBI_Code = ifelse(is.na(FBI_Code),"MISSING",FBI_Code)) %>%
+  mutate(Location = ifelse(is.na(Location),"MISSING", Location)) %>%
+  mutate(Latitude = ifelse(is.na(Latitude),0, Latitude)) %>%
+  mutate(Longitude = ifelse(is.na(Longitude),0, Longitude)) %>%
+  mutate(Location = ifelse(is.na(Location), "MISSING", Location)) %>%
+  mutate(Location_Description = ifelse(is.na(Location_Description),"MISSING", Location_Description)) %>%
+  inner_join(fbi_merge_code_spark, copy = TRUE) %>%
+  mutate(Month = substr(Date,1,2)) %>%
+  mutate(Day = substr(Date,4,5)) %>%
+  mutate(Year = substr(Date, 7,10)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("airport"),"AIRPORT",Location_Description)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("college"),"COLLEGE",Location_Description)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("residence","residential"),"RESIDENTIAL",Location_Description)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("other",""),"OTHER",Location_Description)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("school"),"SCHOOL",Location_Description)) %>%
+  mutate(Location_Description = ifelse(lower(Location_Description) %in% c("parking lot"),"PARKING LOT",Location_Description)) %>%
+  mutate(Location_Description = regexp_replace(Location_Description, "CHA", "CHA")) %>%
+  mutate(Location_Description = regexp_replace(Location_Description, "CTA", "CTA"))
+
+unique_locations <- crimes_spark %>%
+  select(Location_Description) %>%
+  distinct()
+
+
+data_splits <- sdf_random_split(crimes_spark, training = 0.8, testing = 0.2, seed = 1337)
+crimes_training <- data_splits$training
+crimes_test <- data_splits$testing
+
+
+crimes_training %>%
+  group_by(Location_Description) %>%
+  tally() %>%
+  mutate(frac = n / sum(n))
+
+# ## finding binning level
+# crime_rename <- crimes_spark %>%
+#   group_by(Location_Description) %>%
+#   tally()
+#
+# crime_rename$n <- crime_rename$n/nrow(crimes_spark)
+#
+# crime_rename <- crime_rename %>%
+#   group_by(Location.Description) %>%
+#   mutate(Location.Description = ifelse(n <.01, "OTHER", Location.Description))
+#
+#
+#
+# ##removing location descriptions that dont contain at least 1% of the data (i.e. 70kish)
+# unique_crime <- unique(crime_rename$Location.Description)
+# unique_crime_grep <- paste(unique_crime[1], unique_crime[2], unique_crime[3], unique_crime[4], unique_crime[5], unique_crime[6], unique_crime[7], unique_crime[8], unique_crime[9], unique_crime[10], unique_crime[11], unique_crime[12], unique_crime[13], unique_crime[14], unique_crime[15], unique_crime[16], sep = "|")
+# crime$Location.Description[!grepl(unique_crime_grep,crime$Location.Description, ignore.case = TRUE)]<-"OTHER"
+#
+# #unique(crime$Location.Description)
+#
+# ##doing some fixes
+# crime$Location.Description[grepl("Bowling alley|currency exchange",crime$Location.Description, ignore.case = TRUE)]<-"OTHER"
+# crime$Location.Description[grepl("gas station",crime$Location.Description, ignore.case = TRUE)]<-"GAS STATION"
