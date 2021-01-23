@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sat Jan 23 13:40:17 CST 2021:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0177-30c2-ee08-000017ab4840 
+on database directory memory:C:\Users\leroy\Documents\R\chicago-crime-predicitons\databaseName=metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@465111c9 
+Loaded from file:/C:/Users/leroy/AppData/Local/spark/spark-3.0.0-bin-hadoop2.7/jars/derby-10.12.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_261-b12
+user.dir=C:\Users\leroy\Documents\R\chicago-crime-predicitons
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

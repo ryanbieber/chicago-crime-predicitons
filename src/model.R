@@ -13,7 +13,7 @@ fbi_merge_code <- cbind.data.frame(Crimes, FBI_Code)
 library(dplyr)
 
 
-crimes <- read.csv("C:/Users/leroy/Documents/R/chicago-crime-predicitons/data/Crimes_-_2001_to_Present.csv")
+crimes <- read.csv("data/Crimes_-_2001_to_Present.csv")
 
 ##look at the data
 head(crime)
@@ -264,3 +264,6 @@ sex_crimes_count_merged <- sex_crimes_count %>%
 
 
 ###
+
+library(sparklyr)
+sc <- spark_connect("local")
